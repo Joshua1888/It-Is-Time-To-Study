@@ -12,6 +12,51 @@ const Task = {
     timestamp: Date.now()
 };
 
+const timerDisplay = document.getElementById('timer-display');
+const startBtn = document.getElementById('start-btn');
+const resetBtn = document.getElementById('reset-btn');
+let isRunning = false;
+
+// Initialize timer
+chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
+    updateTimerDisplay(response.remaining);
+    updateStatusText(response.isWorking);
+});
+
+// Button handlers
+startBtn.addEventListener('click', () => {
+    isRunning = !isRunning;
+    startBtn.textContent = isRunning ? 'Pause' : 'Resume';
+    startBtn.classList.toggle('running', isRunning);
+    chrome.runtime.sendMessage({ action: isRunning ? 'startTimer' : 'pauseTimer' });
+});
+
+resetBtn.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'resetTimer' });
+});
+
+// Update display
+function updateTimerDisplay(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    timerDisplay.textContent =
+        `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function updateStatusText(isWorking) {
+    document.getElementById('timer-status').textContent =
+        `Current Mode: ${isWorking ? 'Work Session' : 'Break Time'}`;
+}
+
+// Listen for updates
+chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'timerUpdate') {
+        updateTimerDisplay(message.remaining);
+        updateStatusText(message.isWorking);
+    }
+});
+
+
 // 添加任务函数
 function addTask() {
     const input = document.getElementById('task-input');
@@ -46,7 +91,7 @@ function renderTasks(tasks) {
         li.innerHTML = `
       <input type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}">
       <span style="${task.completed ? 'text-decoration: line-through' : ''}">${task.text}</span>
-      <button class="delete-btn" data-id="${task.id}">删除</button>
+      <button class="delete-btn" data-id="${task.id}">DELETE</button>
     `;
 
         // 添加事件监听
