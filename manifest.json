@@ -16,6 +16,11 @@
   },
   "icons": {
     "128": "icons/icon.png"
-  }
+  },
+
+  "options_page": "options.html"
 }
+
+
+
 

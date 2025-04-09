@@ -17,44 +17,40 @@ const startBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
 let isRunning = false;
 
-// Initialize timer
-chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
-    updateTimerDisplay(response.remaining);
-    updateStatusText(response.isWorking);
-});
-
-// Button handlers
-startBtn.addEventListener('click', () => {
-    isRunning = !isRunning;
-    startBtn.textContent = isRunning ? 'Pause' : 'Resume';
-    startBtn.classList.toggle('running', isRunning);
-    chrome.runtime.sendMessage({ action: isRunning ? 'startTimer' : 'pauseTimer' });
-});
-
-resetBtn.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'resetTimer' });
-});
-
-// Update display
-function updateTimerDisplay(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    timerDisplay.textContent =
-        `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function updateStatusText(isWorking) {
-    document.getElementById('timer-status').textContent =
-        `Current Mode: ${isWorking ? 'Work Session' : 'Break Time'}`;
-}
-
-// Listen for updates
+// 实时监听更新
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'timerUpdate') {
         updateTimerDisplay(message.remaining);
         updateStatusText(message.isWorking);
     }
 });
+
+// 初始化状态
+chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
+    if (chrome.runtime.lastError) {
+        console.error('Error:', chrome.runtime.lastError);
+        handleDefaultState();
+        return;
+    }
+    updateTimerDisplay(response.remaining);
+    updateStatusText(response.isWorking);
+});
+
+// 修改显示函数
+function updateTimerDisplay(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    timerDisplay.textContent =
+        `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// 窗口可见性监听
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        chrome.runtime.sendMessage({ action: 'getStatus' }, updateState);
+    }
+});
+
 
 
 // 添加任务函数
