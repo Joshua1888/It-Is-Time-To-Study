@@ -12,47 +12,6 @@ const Task = {
     timestamp: Date.now()
 };
 
-const timerDisplay = document.getElementById('timer-display');
-const startBtn = document.getElementById('start-btn');
-const resetBtn = document.getElementById('reset-btn');
-let isRunning = false;
-
-// 实时监听更新
-chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === 'timerUpdate') {
-        updateTimerDisplay(message.remaining);
-        updateStatusText(message.isWorking);
-    }
-});
-
-// 初始化状态
-chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
-    if (chrome.runtime.lastError) {
-        console.error('Error:', chrome.runtime.lastError);
-        handleDefaultState();
-        return;
-    }
-    updateTimerDisplay(response.remaining);
-    updateStatusText(response.isWorking);
-});
-
-// 修改显示函数
-function updateTimerDisplay(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    timerDisplay.textContent =
-        `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-// 窗口可见性监听
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        chrome.runtime.sendMessage({ action: 'getStatus' }, updateState);
-    }
-});
-
-
-
 // 添加任务函数
 function addTask() {
     const input = document.getElementById('task-input');
@@ -124,3 +83,113 @@ function deleteTask(e) {
         chrome.storage.local.set({ tasks: filteredTasks }, () => renderTasks(filteredTasks));
     });
 }
+
+
+
+// Timer functionality
+let timerId = null;
+let isPaused = false;
+let endTime = null;
+let currentMode = 'focus';
+
+// Timer functions
+function startTimer(duration, mode) {
+    clearInterval(timerId);
+    currentMode = mode;
+    timeLeft = duration * 60;
+    endTime = Date.now() + timeLeft * 1000;
+
+    chrome.storage.local.set({
+        timer: {
+            endTime,
+            mode,
+            paused: false
+        }
+    });
+
+    timerId = setInterval(updateTimer, 1000);
+    updateDisplay();
+}
+
+function updateTimer() {
+    const currentTime = Date.now();
+    timeLeft = Math.round((endTime - currentTime) / 1000);
+
+    if (timeLeft <= 0) {
+        clearInterval(timerId);
+        notifyCompletion();
+        if (currentMode === 'focus') {
+            startTimer(5, 'break');
+        } else {
+            startTimer(25, 'focus');
+        }
+        return;
+    }
+
+    chrome.storage.local.set({
+        timer: {
+            endTime,
+            mode: currentMode,
+            paused: false
+        }
+    });
+
+    updateDisplay();
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    const button = document.getElementById('pause-resume');
+
+    if (isPaused) {
+        clearInterval(timerId);
+        button.textContent = 'Resume';
+        chrome.storage.local.set({ timer: { endTime, mode: currentMode, paused: true } });
+    } else {
+        endTime = Date.now() + timeLeft * 1000;
+        timerId = setInterval(updateTimer, 1000);
+        button.textContent = 'Pause';
+        chrome.storage.local.set({ timer: { endTime, mode: currentMode, paused: false } });
+    }
+}
+
+function updateDisplay() {
+    const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const seconds = (timeLeft % 60).toString().padStart(2, '0');
+    document.getElementById('timer-display').textContent = `${minutes}:${seconds}`;
+}
+
+function notifyCompletion() {
+    new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
+    chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon.png',
+        title: `Time's up!`,
+        message: `${currentMode === 'focus' ? 'Take a break!' : 'Time to focus!'}`
+    });
+}
+
+// Load saved timer
+chrome.storage.local.get(['timer'], ({ timer }) => {
+    if (timer) {
+        const remaining = Math.round((timer.endTime - Date.now()) / 1000);
+        if (remaining > 0) {
+            timeLeft = remaining;
+            endTime = timer.endTime;
+            currentMode = timer.mode;
+            isPaused = timer.paused;
+
+            if (!isPaused) {
+                startTimer(timeLeft / 60, currentMode);
+            } else {
+                updateDisplay();
+                document.getElementById('pause-resume').textContent = 'Resume';
+            }
+        }
+    }
+});
+
+// Event listeners
+document.getElementById('start-focus').addEventListener('click', () => startTimer(25, 'focus'));
+document.getElementById('start-break').addEventListener('click', () => startTimer(5, 'break'));
+document.getElementById('pause-resume').addEventListener('click', togglePause);

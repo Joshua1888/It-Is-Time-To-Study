@@ -58,87 +58,43 @@ body {
     cursor: pointer;
 }
 
+
 .timer-container {
     background: #fff;
-    padding: 15px;
     border-radius: 8px;
+    padding: 15px;
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #timer-display {
-    font-size: 2.5em;
+    font-size: 32px;
+    font-weight: bold;
     text-align: center;
     margin: 10px 0;
     color: #2c3e50;
-    font-family: 'Courier New', monospace;
 }
 
 .timer-controls {
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    justify-content: center;
 }
 
-.timer-controls button {
-    flex: 1;
-    padding: 8px;
+.timer-btn {
+    padding: 8px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.3s;
-}
-
-#start-btn {
     background: #3498db;
     color: white;
+    transition: opacity 0.3s;
 }
 
-#reset-btn {
-    background: #95a5a6;
-    color: white;
+.timer-btn:hover {
+    opacity: 0.9;
 }
 
-#timer-status {
-    text-align: center;
-    font-size: 0.9em;
-    color: #7f8c8d;
-}
-.settings-link {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
-
-.settings-link a {
-    color: #3498db;
-    text-decoration: none;
-    font-size: 0.9em;
-}
-
-.setting-group {
-    margin-bottom: 15px;
-}
-
-.setting-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #2c3e50;
-}
-
-.setting-group input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-#save-settings {
-    width: 100%;
-    background: #27ae60;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
+#start-focus { background: #27ae60; }
+#start-break { background: #e67e22; }
+#pause-resume { background: #7f8c8d; }

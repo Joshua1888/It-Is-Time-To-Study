@@ -5,29 +5,25 @@
 </head>
 <body>
 <div class="container">
-    <!-- Pomodoro Timer -->
+    <h1>Todo Pomodoro</h1>
+
+    <!-- Timer Section -->
     <div class="timer-container">
         <div id="timer-display">25:00</div>
         <div class="timer-controls">
-            <button id="start-btn">Start Focus</button>
-            <button id="reset-btn">Reset</button>
+            <button id="start-focus" class="timer-btn">Focus (25m)</button>
+            <button id="start-break" class="timer-btn">Break (5m)</button>
+            <button id="pause-resume" class="timer-btn">Pause</button>
         </div>
-        <div id="timer-status">Current Mode: Work Session</div>
-    </div>
-    <div class="settings-link">
-        <a href="options.html" target="_blank">⚙️ Settings</a>
     </div>
 
-    <h1>Todo List 🚀</h1>
-
+    <!-- Existing Todo List -->
     <div class="input-group">
         <input type="text" id="task-input" placeholder="Please Enter The New Task">
         <button id="add-btn">ADD</button>
     </div>
-
     <ul id="task-list"></ul>
 </div>
-
 <script src="popup.js"></script>
 </body>
 </html>
